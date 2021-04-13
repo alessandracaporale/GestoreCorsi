@@ -5,8 +5,14 @@
 package it.polito.tdp.corsi;
 
 import java.net.URL;
+
+import java.util.*;
 import java.util.ResourceBundle;
+//import com.sun.tools.javac.util.List;
+import it.polito.tdp.corsi.model.Corso;
 import it.polito.tdp.corsi.model.Model;
+import it.polito.tdp.corsi.model.Studente;
+import it.polito.tdp.corsi.db.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -46,22 +52,104 @@ public class FXMLController {
 
     @FXML
     void corsiPerPeriodo(ActionEvent event) {
+    	this.txtRisultato.clear();
     	
+    	if (this.txtRisultato.getText()==null) {
+    		this.txtRisultato.setText("Periodo didattico errato, inserire 1 o 2");
+    		return;
+    	}
+    	String periodoStringa =txtPeriodo.getText();
+    	Integer periodo;
+    	
+    	try {
+    		periodo = Integer.parseInt(periodoStringa);
+    	}
+    	catch (NumberFormatException ne) {
+    		txtRisultato.setText("Periodo didattico errato, inserire 1 o 2");
+    		return;
+    	}
+    	
+    	if (periodo<1 || periodo>2) {
+    		this.txtRisultato.setText("Periodo didattico errato, inserire 1 o 2");
+    		return;
+    	}
+    	List<Corso> corsi= this.model.getCorsiByPeriodo(periodo);
+    	
+    	for (Corso c : corsi) {
+    		this.txtRisultato.appendText(c.toString()+"\n");
+    	}
     }
 
     @FXML
     void numeroStudenti(ActionEvent event) {
+    	txtRisultato.clear();
     	
+    	if (txtPeriodo.getText() == null) {
+    		txtRisultato.setText("Periodo didattico errato, inserire 1 o 2");
+    		return;
+    	}
+    	
+    	String periodoStringa = txtPeriodo.getText();
+    	Integer periodo;
+    	
+    	try {
+    		periodo = Integer.parseInt(periodoStringa);
+    	}
+    	catch (NumberFormatException ne) {
+    		txtRisultato.setText("Periodo didattico errato, inserire 1 o 2");
+    		return;
+    	}
+    	
+    	Map<Corso, Integer> corsiIscrizione = this.model.getIscrittiByPeriodo(periodo);
+    	for (Corso c : corsiIscrizione.keySet()) {
+    		this.txtRisultato.appendText(c.toString());
+    		Integer n = corsiIscrizione.get(c);
+    		this.txtRisultato.appendText("\t"+n+"\n");
+    	}
+    
     }
 
     @FXML
     void stampaDivisione(ActionEvent event) {
-
+    	//posso non usare il db perchè la stampa degli studenti
+    	//ce l'ho già dal metodo stampStudenti
+		this.txtRisultato.clear();
+		
+		String codice = txtCorso.getText();
+		
+		if (!model.esisteCorso(codice)) {
+			this.txtRisultato.appendText("Il corso non esiste");
+			return;
+		}
+		
+		Map<String, Integer> divisione = model.getDivisioneCDS(codice);
+		
+		for (String cds : divisione.keySet()) {
+			txtRisultato.appendText(cds+ " "+ divisione.get(cds)+"\n");
+		}
+		
     }
 
     @FXML
     void stampaStudenti(ActionEvent event) {
-
+    	txtRisultato.clear();
+    	String codice = txtCorso.getText();
+    	
+    	if(!model.esisteCorso(codice)) {
+    		txtRisultato.appendText("Ilcorsonon esiste");
+    	}
+    	List<Studente> studenti = model.getStudentiByCorso(codice);
+    	
+    	if (studenti.size()==0) {
+    		txtRisultato.appendText("Il corso non ha iscritti");
+    		return;
+    	}
+    	
+    	for (Studente s : studenti) {
+    		txtRisultato.appendText(s+"\n");
+    	}
+    	
+    	
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
